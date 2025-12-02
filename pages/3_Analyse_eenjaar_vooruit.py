@@ -274,14 +274,34 @@ else:
         default=all_tekortpunten_buckets  # Default to all selected
     )
 
+    vergelijk_start = st.sidebar.selectbox(
+        "Vergelijkperiode start schooljaar data:",
+        options=all_schoolyears,
+        index=default_schooljaar_start_idx
+    )
+    vergelijk_eind = st.sidebar.selectbox(
+        "Vergelijkperiode eind schooljaar:",
+        options=all_schoolyears,
+        index=default_schooljaar_end_idx
+    )
+
+    if vergelijk_start > vergelijk_eind:
+        st.sidebar.error("Start Schooljaar cannot be after End Schooljaar.")
+        st.stop()
+
     leerfase_vergelijk = st.sidebar.selectbox(
         "Selecteer de Leerfase (afk) om mee te vergelijken:",
         options=all_leerfases,
         index=5
     )
+    vergelijk_tekortpunten_buckets = st.sidebar.multiselect(
+        "Selecteer tekortpunten (In het Startjaar) om mee te vergelijken:",
+        options=all_tekortpunten_buckets,
+        default=all_tekortpunten_buckets  # Default to all selected
+    )
 
     # --- Main Content ---
-    st.subheader(f"Een jaar vooruit '{leerfase_start}' ({schooljaar_start}-{schooljaar_eind})") # Updated Subheader
+    st.subheader(f"Een jaar vooruit ({schooljaar_start}-{schooljaar_eind})") # Updated Subheader
 
     if st.button("Run Analysis"):
         if updated_df is not None:
@@ -296,29 +316,30 @@ else:
                 )
                 vergelijk_percentages, vergelijk_counts = analyze_next_leerfase(
                     updated_df,
-                    schooljaar_start=schooljaar_start,
-                    schooljaar_eind=schooljaar_eind,
+                    schooljaar_start=vergelijk_start,
+                    schooljaar_eind=vergelijk_eind,
                     leerfase_start=leerfase_vergelijk,
-                    tekortpunten_bucket_filter=selected_tekortpunten_buckets
+                    tekortpunten_bucket_filter=vergelijk_tekortpunten_buckets
                 )
                 col1, col2 = st.columns(2)
                 with col1:
                     if not progression_percentages.empty:
 
-                        st.write("### Eenjaars percentages") # Updated Heading
+                        st.write(f"### Eenjaars percentages {leerfase_start}") # Updated Heading
                         st.dataframe(progression_percentages.reset_index().rename(columns={'index': 'Progression Category', 0: 'Percentage (%)'}))
 
-                        st.write("### Eenjaars aantallen") # New Heading for counts
+                        st.write(f"### Eenjaars aantallen {leerfase_start}") # New Heading for counts
                         st.dataframe(progression_counts.reset_index().rename(columns={'index': 'Progression Category', 0: 'Count'}))
                     else:
                         st.info("No transitions found for the selected criteria.")
                 with col2:
                     if not vergelijk_percentages.empty:
-                        st.write("### Eenjaars percentages")  # Updated Heading
+
+                        st.write(f"### Vergeleken met {leerfase_vergelijk} percentages")  # Updated Heading
                         st.dataframe(vergelijk_percentages.reset_index().rename(
                             columns={'index': 'Progression Category', 0: 'Percentage (%)'}))
 
-                        st.write("### Eenjaars aantallen")  # New Heading for counts
+                        st.write(f"### Eenjaars aantallen {leerfase_vergelijk}")  # New Heading for counts
                         st.dataframe(
                             vergelijk_counts.reset_index().rename(columns={'index': 'Progression Category', 0: 'Count'}))
                     else:
