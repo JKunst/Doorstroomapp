@@ -256,8 +256,8 @@ else:
             df['Inschrijvingsdatum'] = pd.to_datetime(df['Inschrijvingsdatum'])
 
             # Create 'Tekortpunten_Bucket' column
-            bins = [-1, 2, 5, 8, np.inf]
-            labels = ['0-2', '3-5', '6-8', '9+']
+            bins = [-1, 2, 6, 9, np.inf]
+            labels = ['0-3', '4-6', '7-9', '10+']
             df['Tekortpunten_Bucket'] = pd.cut(df['Tekortpunten'], bins=bins, labels=labels, right=True,
                                                include_lowest=True)
 
