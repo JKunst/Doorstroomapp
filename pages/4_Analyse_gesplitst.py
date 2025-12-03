@@ -472,6 +472,7 @@ else:
         default=all_tekortpunten_buckets # Default to all selected
     )
 
+
     # --- Main Content ---
     st.subheader(f"Progression Analysis from '{leerfase_start}' ({schooljaar_start}-{schooljaar_eind})")
 
