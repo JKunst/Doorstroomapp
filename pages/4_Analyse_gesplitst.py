@@ -339,7 +339,7 @@ def prepare_sankey_data(transition_counts):
 
     return labels, aggregated_links['source'].tolist(), aggregated_links['target'].tolist(), aggregated_links['value'].tolist()
 
-def plot_sankey_diagram(labels, source, target, value, title="Student Leerfase Progression (3-Year Transitions)"):
+def plot_sankey_diagram(labels, source, target, value, title="Doorstroom van leerlingen (3-Year Transitions)"):
     """
     Generates an interactive Sankey diagram.
 
@@ -377,7 +377,7 @@ def plot_sankey_diagram(labels, source, target, value, title="Student Leerfase P
 
 # --- Streamlit App Layout ---
 st.set_page_config(layout="wide")
-st.title("Student Leerfase Progression Analysis")
+st.title("Selecteer een groep leerlingen om doorstroom te bekijken")
 
 # --- Passcode Authentication ---
 CORRECT_PASSCODE = "BovenbouwSuc6"
@@ -450,6 +450,12 @@ else:
 
     # Leerfase_start
     all_leerfases = sorted(updated_df['Leerfase (afk)'].dropna().unique().tolist())
+    all_leerfases.pop(0)
+    all_leerfases.pop(0)
+    all_leerfases.pop(0)
+    all_leerfases.pop(0)
+    all_leerfases.pop(0)
+    all_leerfases.pop(0)
     leerfase_start = st.sidebar.selectbox(
         "Select Start Leerfase (afk):",
         options=all_leerfases
@@ -458,7 +464,7 @@ else:
     # Leerfase_vergelijk (new filter)
     leerfase_vergelijk_options = ['None'] #+ all_leerfases # Add 'None' option
     leerfase_vergelijk_selection = st.sidebar.selectbox(
-        "Compare next Leerfase to (optional):",
+        "Vergelijk (nog niet mogelijk):",
         options=leerfase_vergelijk_options,
         index=0 # Default to 'None'
     )
@@ -474,7 +480,7 @@ else:
 
 
     # --- Main Content ---
-    st.subheader(f"Progression Analysis from '{leerfase_start}' ({schooljaar_start}-{schooljaar_eind})")
+    st.subheader(f"Doorstroom van '{leerfase_start}' ({schooljaar_start}-{schooljaar_eind}' met tekortpunten '{selected_tekortpunten_buckets})")
 
     if st.button("Run Analysis"):
         if updated_df is not None:

@@ -299,6 +299,11 @@ else:
     # Leerfase_start
     all_leerfases = sorted(updated_df['Leerfase (afk)'].dropna().unique().tolist())
     all_leerfases.pop(0)
+    all_leerfases.pop(0)
+    all_leerfases.pop(0)
+    all_leerfases.pop(0)
+    all_leerfases.pop(0)
+    all_leerfases.pop(0)
     leerfase_start = st.sidebar.selectbox(
         "Selecteer de Leerfase (afk):",
         options=all_leerfases,
