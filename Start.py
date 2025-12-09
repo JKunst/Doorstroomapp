@@ -13,4 +13,6 @@ st.write("Gebaseerd op de Cumlaude data van de schooljaren 2017-2018 tot 2024-20
          ""
          "Laat vragen of opmerkingen vooral weten.")
 
+st.write("v0.91 Laatst aangepast 9-12-2025, data verbetering voor onduidelijke doorstroomcategorieën (bijv. h4->VAVO), toelichting pagina Analyse gesplitst.")
+
 st.sidebar.success("Select een optie")
