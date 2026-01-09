@@ -1,4 +1,5 @@
 import streamlit as st
+import st_pages
 
 st.set_page_config(
     page_title="Hello",
@@ -13,8 +14,11 @@ st.write("Gebaseerd op de Cumlaude data van de schooljaren 2017-2018 tot 2024-20
          ""
          "Laat vragen of opmerkingen vooral weten.")
 
+st.page_link("pages/2_Analyse_gegroepeerd_naar_tekorten.py", label="Start met ontdekken", icon="1️⃣")
+st.write("v1.1 Aanpassing paginavolgorde, precentages in tabel, filters boven tabellen in 3 jaars vergelijk")
 st.write("v1.0 Laatst aangepast 11-12-2025, data validatie heeft plaatsgevonden met Cumlaude percentages, leerlingen naar MBO gelabeld.")
 st.write("v0.91 Laatst aangepast 9-12-2025, data verbetering voor onduidelijke doorstroomcategorieën (bijv. h4->VAVO), toelichting pagina Analyse gesplitst.")
 st.write("v0.8 Laatst aangepast 3-12-2025, extra pagina met analyse gesplitst en tekortpunten.")
 st.write("v0.7 Laatst aangepast 26-11-2025, Eerste pagina om groepen doorstroom te vergelijken")
-st.sidebar.success("Select een optie")
+st.showSidebarNavigation = False
+st_pages.hide_pages(["1_Analyse_per_leerfase", "3_Analyse_eenjaar_vooruit", "4_Analyse_gesplitst"])#st.sidebar.success("Select een optie")

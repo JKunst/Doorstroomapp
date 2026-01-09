@@ -454,3 +454,14 @@ else:
                     st.info("No transitions found for the selected criteria.")
         else:
             st.error("Data not loaded. Please check the file path and data content.")
+#st_pages.hide_pages(["1_Analyse_per_leerfase", "3_Analyse_eenjaar_vooruit", "4_Analyse_gesplitst"])
+st.markdown(
+    """
+<style>
+    [data-testid="collapsedControl"] {
+        display: none
+    }
+</style>
+""",
+    unsafe_allow_html=True,
+)

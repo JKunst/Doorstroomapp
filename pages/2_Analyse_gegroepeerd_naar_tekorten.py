@@ -10,6 +10,7 @@ import os
 # drive.mount('/content/drive')
 
 # --- Functions (copied from notebook) ---
+st.set_page_config(layout="wide")
 st.set_page_config(page_title="Met tekortpunten", page_icon="📈")
 def analyze_three_year_leerfase_transitions(df, schooljaar_start, schooljaar_eind, leerfase_start,
                                             leerlingnummer_filter=None, tekortpunten_bucket_filter=None):
@@ -123,6 +124,22 @@ def analyze_three_year_leerfase_transitions(df, schooljaar_start, schooljaar_ein
 
     return transition_counts
 
+def counts_with_percentages(transition_counts: pd.Series) -> pd.DataFrame:
+    """
+    Zet een Series met aantallen om naar een DataFrame met aantallen + percentages
+    """
+    total = transition_counts.sum()
+
+    df_out = (
+        transition_counts
+        .rename("Aantal")
+        .to_frame()
+    )
+
+    df_out["Percentage"] = (df_out["Aantal"] / total * 100).round(0).astype(int)
+    df_out["Percentage"] = df_out["Percentage"].astype(str) + "%"
+    return df_out
+
 
 def prepare_sankey_data(transition_counts):
     """
@@ -222,13 +239,12 @@ def plot_sankey_diagram(labels, source, target, value, title="Doorstroom leerlin
 
 # --- Streamlit App Layout ---
 
-st.title("Analyse van doorstroom (3-jaar vooruit), met tekortpunten groepering")
 
 # --- Passcode Authentication ---
 CORRECT_PASSCODE = "BovenbouwSuc6"
 
 if 'logged_in' not in st.session_state:
-    st.session_state.logged_in = False
+    st.session_state.logged_in = True #Aanpassen
 
 if not st.session_state.logged_in:
     st.subheader("Login")
@@ -281,20 +297,7 @@ else:
         default_schooljaar_start_idx = 0
         default_schooljaar_end_idx = 0
 
-    schooljaar_start = st.sidebar.selectbox(
-        "Selecteer start schooljaar data (kies bijv. 2022 voor schooljaar 2022-2023):",
-        options=all_schoolyears,
-        index=default_schooljaar_start_idx
-    )
-    schooljaar_eind = st.sidebar.selectbox(
-        "Select eind schooljaar:",
-        options=all_schoolyears,
-        index=default_schooljaar_end_idx
-    )
 
-    if schooljaar_start > schooljaar_eind:
-        st.sidebar.error("Start Schooljaar cannot be after End Schooljaar.")
-        st.stop()
 
     # Leerfase_start
     all_leerfases = sorted(updated_df['Leerfase (afk)'].dropna().unique().tolist())
@@ -304,62 +307,108 @@ else:
     all_leerfases.pop(0)
     all_leerfases.pop(0)
     all_leerfases.pop(0)
-    leerfase_start = st.sidebar.selectbox(
-        "Selecteer de Leerfase (afk):",
-        options=all_leerfases,
-        index=5
-    )
 
-    # Tekortpunten_Bucket filter
     all_tekortpunten_buckets = sorted(updated_df['Tekortpunten_Bucket'].dropna().unique().tolist())
-    selected_tekortpunten_buckets = st.sidebar.multiselect(
-        "Selecteer de filter op tekortpunten (In het Startjaar):",
-        options=all_tekortpunten_buckets,
-        default=all_tekortpunten_buckets  # Default to all selected
-    )
-
-    leerfase_vergelijk = st.sidebar.selectbox(
-        "Selecteer de Leerfase (afk) om mee te vergelijken:",
-        options=all_leerfases,
-        index=5
-    )
 
     # --- Main Content ---
 
+    st.subheader("Analyse van doorstroom (3-jaar vooruit), met tekortpunten groepering")
 
-    st.subheader(f"Hieronder de groep leerlingen uit '{leerfase_start}' van {schooljaar_start}-{schooljaar_eind + 1} en hun doorstroom in de daaropvolgende jaren")
+    #st.subheader(f"Hieronder de groep leerlingen uit '{leerfase_start}' van {schooljaar_start}-{schooljaar_eind + 1} en hun doorstroom in de daaropvolgende jaren")
     st.text("Toelichting")
-    if st.button("Run Analysis"):
+    if True:
         if updated_df is not None:
             with st.spinner("Berekenen en plaatje maken..."):
-                three_year_transition_counts = analyze_three_year_leerfase_transitions(
-                    updated_df,
-                    schooljaar_start=schooljaar_start,
-                    schooljaar_eind=schooljaar_eind,
-                    leerfase_start=leerfase_start,
-                    tekortpunten_bucket_filter=selected_tekortpunten_buckets
-                )
-                three_year_transition_counts_vergelijk = analyze_three_year_leerfase_transitions(
-                    updated_df,
-                    schooljaar_start=schooljaar_start,
-                    schooljaar_eind=schooljaar_eind,
-                    leerfase_start=leerfase_vergelijk
-                )
+
+
 
                 col1, col2 = st.columns(2)
                 with col1:
-                    if not three_year_transition_counts.empty:
-                        st.write("### Aantallen")
+                    schooljaar_start = st.selectbox(
+                        "Selecteer start schooljaar data (kies bijv. 2022 en 2022 voor schooljaar 2022-2023, of 2022 2023 voor schooljaren 2022 augustus-2024 juli):",
+                        options=all_schoolyears,
+                        index=default_schooljaar_start_idx
+                    )
+                    schooljaar_eind = st.selectbox(
+                        "Tot schooljaar:",
+                        options=all_schoolyears,
+                        index=default_schooljaar_end_idx
+                    )
 
-                        st.dataframe(three_year_transition_counts)
+                    if schooljaar_start > schooljaar_eind:
+                        st.sidebar.error("Start Schooljaar cannot be after End Schooljaar.")
+                        st.stop()
+                    leerfase_start = st.selectbox(
+                        "Selecteer de Leerfase (afk):",
+                        options=all_leerfases,
+                        index=5
+                    )
+
+                    # Tekortpunten_Bucket filter
+
+                    selected_tekortpunten_buckets = st.multiselect(
+                        "Selecteer de filter op tekortpunten (In het Startjaar):",
+                        options=all_tekortpunten_buckets,
+                        default=all_tekortpunten_buckets  # Default to all selected
+                    )
+                    three_year_transition_counts = analyze_three_year_leerfase_transitions(
+                        updated_df,
+                        schooljaar_start=schooljaar_start,
+                        schooljaar_eind=schooljaar_eind,
+                        leerfase_start=leerfase_start,
+                        tekortpunten_bucket_filter=selected_tekortpunten_buckets
+                    )
+                    if not three_year_transition_counts.empty:
+                        st.write("### Aantallen en percentages")
+
+                        df_three_year = counts_with_percentages(three_year_transition_counts)
+
+                        st.dataframe(df_three_year)
 
                     else:
                         st.info("No transitions found for the selected criteria.")
                 with col2:
+
+                    schooljaar_start_vergelijk = st.selectbox(
+                        "Selecteer ook alle filters voor de groep waarmee je wil vergelijken. ________________________________________________",
+                        options=all_schoolyears,
+                        index=default_schooljaar_start_idx,
+                        key=1
+                    )
+                    schooljaar_eind_vergelijk = st.selectbox(
+                        "Tot schooljaar:",
+                        options=all_schoolyears,
+                        index=default_schooljaar_end_idx,
+                        key=2
+                    )
+
+                    leerfase_vergelijk = st.selectbox(
+                        "Selecteer de Leerfase (afk) om mee te vergelijken:",
+                        options=all_leerfases,
+                        index=5
+                    )
+
+                    selected_tekortpunten_buckets_vergelijk = st.multiselect(
+                        "Selecteer de filter op tekortpunten (In het Startjaar):",
+                        options=all_tekortpunten_buckets,
+                        default=all_tekortpunten_buckets,  # Default to all selected
+                        key=6
+                    )
+                    three_year_transition_counts_vergelijk = analyze_three_year_leerfase_transitions(
+                        updated_df,
+                        schooljaar_start=schooljaar_start,
+                        schooljaar_eind=schooljaar_eind,
+                        leerfase_start=leerfase_vergelijk,
+                        tekortpunten_bucket_filter=selected_tekortpunten_buckets_vergelijk
+                    )
                     if not three_year_transition_counts.empty:
                         st.write("### Vergelijking")
 
-                        st.dataframe(three_year_transition_counts_vergelijk)
+                        df_three_year_vergelijk = counts_with_percentages(
+                            three_year_transition_counts_vergelijk
+                        )
+
+                        st.dataframe(df_three_year_vergelijk)
                         st.write(
                             "Toelichting: als er alleen een leerfase met een aantal staat zonder pijltje. Dan zijn deze leerlingen "
                             "in de geselecteerde periode in de geselecteerde leerfase aangekomen, maar nog niet doorgestroomd. Bijvoorbeeld als je jaren 2023-2024 selecteerd dan zijn er in 2024 leerlingen in H4 gestart, maar zonder data van 2025-2026 zijn deze leerlingen nog niet doorgestroomd. Zie onderaan op de Analyse per leerfase pagina de tabel met leerlingnummers voor meer inzicht.")
@@ -383,3 +432,5 @@ else:
                     st.info("No transitions found for the selected criteria.")
         else:
             st.error("Data not loaded. Please check the file path and data content.")
+
+st.showSidebarNavigation = False
