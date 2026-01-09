@@ -2,3 +2,4 @@ plotly==6.5.0
 numpy
 pandas
 openpyxl
+st_pages
