@@ -244,7 +244,7 @@ def plot_sankey_diagram(labels, source, target, value, title="Doorstroom leerlin
 CORRECT_PASSCODE = "BovenbouwSuc6"
 
 if 'logged_in' not in st.session_state:
-    st.session_state.logged_in = True #Aanpassen
+    st.session_state.logged_in = False #Aanpassen
 
 if not st.session_state.logged_in:
     st.subheader("Login")
