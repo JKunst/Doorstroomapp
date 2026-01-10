@@ -1,8 +1,10 @@
-import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+from components.doorstroom_functions import *
+import streamlit as st
 import numpy as np
 import os
+
 
 
 # Mount Google Drive (if running in Colab, this will prompt authentication)
@@ -12,229 +14,6 @@ import os
 # --- Functions (copied from notebook) ---
 st.set_page_config(layout="wide")
 st.set_page_config(page_title="Met tekortpunten", page_icon="📈")
-def analyze_three_year_leerfase_transitions(df, schooljaar_start, schooljaar_eind, leerfase_start,
-                                            leerlingnummer_filter=None, tekortpunten_bucket_filter=None):
-    """
-    Analyzes 'Leerfase (afk)' transitions for students over three consecutive school years.
-    Shows up to three transitions, even if fewer are available consecutively.
-
-    Args:
-        df (pd.DataFrame): The input DataFrame, expected to be sorted by 'Leerlingnummer' and 'Schooljaar'.
-                           It must contain 'Leerlingnummer', 'Schooljaar', and 'Leerfase (afk)' columns.
-        schooljaar_start (int): The starting school year (inclusive) for the analysis.
-        schooljaar_eind (int): The ending school year (inclusive) for the analysis.
-        leerfase_start (str): The specific 'Leerfase (afk)' from which to track transitions.
-        leerlingnummer_filter (int or list, optional): A single 'Leerlingnummer' or a list of 'Leerlingnummer's
-                                                       to filter the analysis. Defaults to None (all students).
-        tekortpunten_bucket_filter (list, optional): A list of 'Tekortpunten_Bucket' categories to filter.
-                                                   Defaults to None (all buckets).
-
-    Returns:
-        pd.Series: A Series with three-year transition strings as index and counts as values.
-                   (e.g., "v5 -> v6", "v5 -> v6 -> h1", or "v5 -> v6 -> h1 -> h2").
-    """
-    # Filter students who were in the leerfase_start within the specified year range.
-    initial_phase_students_df = df[
-        (df['Schooljaar'] >= schooljaar_start) &
-        (df['Schooljaar'] <= schooljaar_eind) &
-        (df['Leerfase (afk)'] == leerfase_start)
-        ].copy()  # Use .copy() to avoid SettingWithCopyWarning
-
-    if leerlingnummer_filter is not None:
-        if isinstance(leerlingnummer_filter, int):
-            leerlingnummer_filter = [leerlingnummer_filter]
-        initial_phase_students_df = initial_phase_students_df[
-            initial_phase_students_df['Leerlingnummer'].isin(leerlingnummer_filter)
-        ]
-
-    if tekortpunten_bucket_filter is not None and len(tekortpunten_bucket_filter) > 0:
-        initial_phase_students_df = initial_phase_students_df[
-            initial_phase_students_df['Tekortpunten_Bucket'].isin(tekortpunten_bucket_filter)
-        ]
-
-    # Get unique Leerlingnummer's from the filtered initial phase students
-    relevant_leerlingnummers = initial_phase_students_df['Leerlingnummer'].unique()
-
-    if len(relevant_leerlingnummers) == 0:
-        # st.warning(f"No students found in '{leerfase_start}' between {schooljaar_start}-{schooljaar_eind} (or matching filter).")
-        return pd.Series([], dtype=int)
-
-    # Get ALL records for these relevant students.
-    student_records = df[df['Leerlingnummer'].isin(relevant_leerlingnummers)].copy()
-    student_records = student_records.sort_values(by=['Leerlingnummer', 'Schooljaar'])
-
-    # Calculate the next two 'Leerfase (afk)' and 'Schooljaar' for each student
-    student_records['next_leerfase_1'] = student_records.groupby('Leerlingnummer')['Leerfase (afk)'].shift(-1)
-    student_records['next_schooljaar_1'] = student_records.groupby('Leerlingnummer')['Schooljaar'].shift(-1)
-    student_records['next_leerfase_2'] = student_records.groupby('Leerlingnummer')['Leerfase (afk)'].shift(-2)
-    student_records['next_schooljaar_2'] = student_records.groupby('Leerlingnummer')['Schooljaar'].shift(-2)
-    student_records['next_leerfase_3'] = student_records.groupby('Leerlingnummer')['Leerfase (afk)'].shift(-3)
-    student_records['next_schooljaar_3'] = student_records.groupby('Leerlingnummer')['Schooljaar'].shift(-3)
-
-    # Filter for starting points within the specified range
-    transitions_df = student_records[
-        (student_records['Leerfase (afk)'] == leerfase_start) &
-        (student_records['Schooljaar'] >= schooljaar_start) &
-        (student_records['Schooljaar'] <= schooljaar_eind)
-        ].copy()
-
-    # Apply tekortpunten_bucket_filter to the starting points again if specified
-    if tekortpunten_bucket_filter is not None and len(tekortpunten_bucket_filter) > 0:
-        transitions_df = transitions_df[
-            transitions_df['Tekortpunten_Bucket'].isin(tekortpunten_bucket_filter)
-        ]
-
-    if transitions_df.empty:
-        # st.warning(f"No starting points found from '{leerfase_start}' between {schooljaar_start}-{schooljaar_eind} (or matching filter).")
-        return pd.Series([], dtype=int)
-
-    # Initialize the transition string with the starting phase and its bucket
-    transitions_df['Transition'] = transitions_df['Leerfase (afk)'] + ' [' + transitions_df[
-        'Tekortpunten_Bucket'].astype(str) + ']'
-
-    # Conditionally add the first transition
-    transitions_df['Transition'] = np.where(
-        (transitions_df['next_schooljaar_1'] == transitions_df['Schooljaar'] + 1) & (
-            transitions_df['next_leerfase_1'].notna()),
-        transitions_df['Transition'] + ' -> ' + transitions_df['next_leerfase_1'],
-        transitions_df['Transition']
-    )
-
-    # Conditionally add the second transition
-    transitions_df['Transition'] = np.where(
-        (transitions_df['next_schooljaar_1'] == transitions_df['Schooljaar'] + 1) &
-        (transitions_df['next_schooljaar_2'] == transitions_df['Schooljaar'] + 2) &
-        (transitions_df['next_leerfase_2'].notna()),
-        transitions_df['Transition'] + ' -> ' + transitions_df['next_leerfase_2'],
-        transitions_df['Transition']
-    )
-
-    # Conditionally add the third transition
-    transitions_df['Transition'] = np.where(
-        (transitions_df['next_schooljaar_1'] == transitions_df['Schooljaar'] + 1) &
-        (transitions_df['next_schooljaar_2'] == transitions_df['Schooljaar'] + 2) &
-        (transitions_df['next_schooljaar_3'] == transitions_df['Schooljaar'] + 3) &
-        (transitions_df['next_leerfase_3'].notna()),
-        transitions_df['Transition'] + ' -> ' + transitions_df['next_leerfase_3'],
-        transitions_df['Transition']
-    )
-
-    # Aantal the occurrences of each unique transition
-    transition_counts = transitions_df['Transition'].value_counts()
-
-    return transition_counts
-
-def counts_with_percentages(transition_counts: pd.Series) -> pd.DataFrame:
-    """
-    Zet een Series met aantallen om naar een DataFrame met aantallen + percentages
-    """
-    total = transition_counts.sum()
-
-    df_out = (
-        transition_counts
-        .rename("Aantal")
-        .to_frame()
-    )
-
-    df_out["Percentage"] = (df_out["Aantal"] / total * 100).round(0).astype(int)
-    df_out["Percentage"] = df_out["Percentage"].astype(str) + "%"
-    return df_out
-
-
-def prepare_sankey_data(transition_counts):
-    """
-    Processes transition counts to prepare data for a Sankey diagram.
-
-    Args:
-        transition_counts (pd.Series): A Series where the index contains transition strings
-                                       (e.g., 'h3 -> h4 -> Geslaagd') and values are the counts.
-
-    Returns:
-        tuple: A tuple containing four lists: (labels, source, target, value)
-               - labels (list): Unique node labels.
-               - source (list): Source node indices for links.
-               - target (list): Target node indices for links.
-               - value (list): Values (counts) for links.
-    """
-    all_labels = []
-    for transition_string in transition_counts.index:
-        # Split on ' -> ' to get individual nodes
-        steps = transition_string.split(' -> ')
-        all_labels.extend(steps)
-
-    # Remove duplicates and sort for consistent node ordering
-    labels = sorted(list(set(all_labels)))
-
-    # Create a mapping from label to its index
-    label_to_index = {label: i for i, label in enumerate(labels)}
-
-    source = []
-    target = []
-    value = []
-
-    for transition_string, Aantal in transition_counts.items():
-        steps = transition_string.split(' -> ')
-        for i in range(len(steps) - 1):
-            step_current = steps[i]
-            step_next = steps[i + 1]
-
-            # Get indices for source and target
-            source_index = label_to_index[step_current]
-            target_index = label_to_index[step_next]
-
-            source.append(source_index)
-            target.append(target_index)
-            value.append(Aantal)
-
-    # Aggregate values for identical source-target links
-    sankey_links_df = pd.DataFrame({
-        'source': source,
-        'target': target,
-        'value': value
-    })
-
-    # Group by source and target and sum the values
-    aggregated_links = sankey_links_df.groupby(['source', 'target'])['value'].sum().reset_index()
-
-    return labels, aggregated_links['source'].tolist(), aggregated_links['target'].tolist(), aggregated_links[
-        'value'].tolist()
-
-
-def plot_sankey_diagram(labels, source, target, value, title="Doorstroom leerlingen (3-jaar vooruit)"):
-    """
-    Generates an interactive Sankey diagram.
-
-    Args:
-        labels (list): Unique node labels.
-        source (list): Source node indices for links.
-        target (list): Target node indices for links.
-        value (list): Values (counts) for links.
-        title (str): Title for the Sankey diagram.
-
-    Returns:
-        go.Figure: A Plotly Figure object representing the Sankey diagram.
-    """
-    fig = go.Figure(data=[
-        go.Sankey(
-            node=dict(
-                pad=15,
-                thickness=20,
-                line=dict(color="black", width=0.5),
-                label=labels,
-                # color=["blue", "blue", "red", "red", ...] # Example: assign colors to nodes
-            ),
-            link=dict(
-                source=source,  # indices correspond to labels, e.g. 0 = 'A', 1 = 'B', 2 = 'C'
-                target=target,
-                value=value,
-                # color=["rgba(0,0,255,0.2)", ...] # Example: assign colors to links
-            )
-        )
-    ])
-
-    fig.update_layout(title_text=title, font_size=10)
-    # fig.show() # In Streamlit, use st.plotly_chart(fig)
-    return fig
 
 
 # --- Streamlit App Layout ---
@@ -286,7 +65,6 @@ else:
     updated_df = load_data()
 
     # --- Sidebar for Filters ---
-    st.sidebar.header("Analysis Filters")
 
     # Schooljaar_start and Schooljaar_eind
     all_schoolyears = sorted(updated_df['Schooljaar'].unique().tolist())
@@ -351,6 +129,14 @@ else:
                         options=all_tekortpunten_buckets,
                         default=all_tekortpunten_buckets  # Default to all selected
                     )
+                    progression_percentages = analyze_next_leerfase(
+                        updated_df,
+                        schooljaar_start=schooljaar_start,
+                        schooljaar_eind=schooljaar_eind,
+                        leerfase_start=leerfase_start,
+                        tekortpunten_bucket_filter=selected_tekortpunten_buckets
+
+                    )
                     three_year_transition_counts = analyze_three_year_leerfase_transitions(
                         updated_df,
                         schooljaar_start=schooljaar_start,
@@ -360,7 +146,7 @@ else:
                     )
                     if not three_year_transition_counts.empty:
                         st.write("### Aantallen en percentages")
-
+                        st.dataframe(progression_percentages)
                         df_three_year = counts_with_percentages(three_year_transition_counts)
 
                         st.dataframe(df_three_year)
@@ -396,14 +182,22 @@ else:
                     )
                     three_year_transition_counts_vergelijk = analyze_three_year_leerfase_transitions(
                         updated_df,
-                        schooljaar_start=schooljaar_start,
-                        schooljaar_eind=schooljaar_eind,
+                        schooljaar_start=schooljaar_start_vergelijk,
+                        schooljaar_eind=schooljaar_eind_vergelijk,
                         leerfase_start=leerfase_vergelijk,
                         tekortpunten_bucket_filter=selected_tekortpunten_buckets_vergelijk
                     )
+                    vergelijk_percentages = analyze_next_leerfase(
+                        updated_df,
+                        schooljaar_start=schooljaar_start_vergelijk,
+                        schooljaar_eind=schooljaar_eind_vergelijk,
+                        leerfase_start=leerfase_vergelijk,
+                        tekortpunten_bucket_filter=selected_tekortpunten_buckets_vergelijk
+
+                    )
                     if not three_year_transition_counts.empty:
                         st.write("### Vergelijking")
-
+                        st.dataframe(vergelijk_percentages)
                         df_three_year_vergelijk = counts_with_percentages(
                             three_year_transition_counts_vergelijk
                         )
