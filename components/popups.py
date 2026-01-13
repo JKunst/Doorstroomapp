@@ -3,6 +3,7 @@ import streamlit as st
 @st.dialog("Nieuw per versie van app (Huidige 1.1)")
 def release_notes():
     st.markdown("""
+    v1.2 Aanpassingen flow en opmaak, leesbaarheid.  \n
     v1.1 Aanpassing paginavolgorde, precentages in tabel, filters boven tabellen in 3 jaars vergelijk.  \n
 v1.0 Laatst aangepast 11-12-2025, data validatie heeft plaatsgevonden met Cumlaude percentages, leerlingen naar MBO gelabeld.  \n
 v0.91 Laatst aangepast 9-12-2025, data verbetering voor onduidelijke doorstroomcategorieën (bijv. h4->VAVO), toelichting pagina Analyse gesplitst.  \n

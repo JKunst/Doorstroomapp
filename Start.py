@@ -48,10 +48,11 @@ st.write("Met deze tool kan je op ontdekkingstocht in de doorstroomdata. \n   \n
          "Alle pagina's zijn gebaseerd op de Cumlaude data van de schooljaren 2017-2018 tot 2024-2025. "
         "De tekortpunten zijn voor het eindrapport opgeteld over de vakken per leerling. Deze worden gegroepeerd gebruikt in deze rekentool (0-3, 4-6 etc.). "
         "De overgangen worden weergegeven op basis van de kolom Leerfase (afk) in Cumlaude, "
-        "waarbij voor doublure aan de afkorting is toegevoegd. Bijvoorbeeld h4_doublure geeft de groep die voor de tweede keer in havo 4 zit."
-         ""
+        "waarbij voor doublure aan de afkorting is toegevoegd. Bijvoorbeeld h4_doublure geeft de groep die voor de tweede keer in havo 4 zit.  \n"
+
          )
-st.write("Begin met stap 1 hieronder.")
+st.write("Een vraag die je jezelf kan stellen is: Hoeveel leerlingen stromen op van H5 naar het VWO, of, wat is het effect van kansrijk bevorderen?")
+st.write("Begin met stap 1 hieronder. Veel plezier!")
 
 col2, col3, col4, col5 = st.columns(4)
 
@@ -121,7 +122,7 @@ st.write("  \n    \n  \n  \n  \n  \n  \n  \n   \n")
 st.write("  \n    \n  \n  \n  \n  \n  \n  \n   \n")
 st.write("  \n    \n  \n  \n  \n  \n  \n  \n   \n")
 st.button(
-    "ℹ️ Uitleg: Wat is nieuw per versie 1.1?",
+    "ℹ️ Uitleg: Wat is nieuw per versie 1.2?",
     on_click=release_notes
 )
 st.showSidebarNavigation = False
