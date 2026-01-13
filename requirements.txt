@@ -3,3 +3,4 @@ numpy
 pandas
 openpyxl
 st_pages
+streamlit-extras

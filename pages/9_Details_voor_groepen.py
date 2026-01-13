@@ -307,6 +307,43 @@ def plot_sankey_diagram(labels, source, target, value, title="Student Leerfase P
 
 # --- Streamlit App Layout ---
 st.set_page_config(page_title="Met tekortpunten", page_icon="📈")
+st.markdown(
+    """
+    <style>
+    .card-link {
+        text-decoration: none;
+    }
+
+    .card {
+        padding: 1.6rem;
+        border-radius: 18px;
+        height: 100%;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+        transition: all 0.2s ease;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 22px rgba(0,0,0,0.12);
+    }
+
+    .card h3 {
+        margin-top: 0;
+        margin-bottom: 0.6rem;
+        font-size: 1.15rem;
+    }
+
+    .card p {
+        margin: 0;
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 st.title("Analyse van doorstroom (3-jaar vooruit)")
 # --- Passcode Authentication ---
 CORRECT_PASSCODE = "BovenbouwSuc6"
@@ -314,7 +351,7 @@ CORRECT_PASSCODE = "BovenbouwSuc6"
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 
-if not st.session_state.logged_in:
+if False:# not st.session_state.logged_in:
     st.subheader("Login")
     passcode_attempt = st.text_input("Enter Passcode en klik de knop!", type="password")
     if st.button("Login"):
@@ -359,15 +396,15 @@ else:
         default_schooljaar_start_idx = 0
         default_schooljaar_end_idx = 0
 
-    schooljaar_start = st.sidebar.selectbox(
+    schooljaar_start = st.selectbox(
         "Selecteer start schooljaar data (kies bijv. 2022 voor schooljaar 2022-2023):",
         options=all_schoolyears,
-        index=default_schooljaar_start_idx
+        index=5
     )
-    schooljaar_eind = st.sidebar.selectbox(
+    schooljaar_eind = st.selectbox(
         "Select eind schooljaar:",
         options=all_schoolyears,
-        index=default_schooljaar_end_idx
+        index=5
     )
 
     if schooljaar_start > schooljaar_eind:
@@ -382,12 +419,14 @@ else:
     all_leerfases.pop(0)
     all_leerfases.pop(0)
     all_leerfases.pop(0)
-    leerfase_start = st.sidebar.selectbox(
+    all_leerfases.pop(0)
+    all_leerfases.pop(0)
+    leerfase_start = st.selectbox(
         "Selecteer de Leerfase (afk):",
         options=all_leerfases,
-        index=5
+        index=4
     )
-    leerfase_vergelijk = st.sidebar.selectbox(
+    leerfase_vergelijk = st.selectbox(
         "Selecteer de Leerfase (afk) om mee te vergelijken:",
         options=all_leerfases,
         index=5
@@ -465,3 +504,12 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
+st.markdown(
+        """
+        <a class="card-link" href="/" target="_self">
+            <div class="card" style="background-color:#F8FAFC;">
+                <h3>Terug naar start</h3>
+        </a>
+        """,
+        unsafe_allow_html=True
+    )
