@@ -131,7 +131,7 @@ else:
     st.subheader("De doorstroom 3-jaar vooruit")
 
     #st.subheader(f"Hieronder de groep leerlingen uit '{leerfase_start}' van {schooljaar_start}-{schooljaar_eind + 1} en hun doorstroom in de daaropvolgende jaren")
-    st.text("*Toelichting* ")
+
     st.text("Gebruik onderstaande filters om een groep leerlingen te onderzoeken. De filters aan de rechterkant zijn voor de tweede groep om mee te vergelijken.")
     st.button(
         "ℹ️ Uitleg: Hulp bij filters.",
