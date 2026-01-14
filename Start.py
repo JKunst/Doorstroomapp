@@ -3,8 +3,8 @@ import st_pages
 from components.popups import *
 
 st.set_page_config(
-    page_title="Hello",
-    page_icon="👋",
+    page_title="Doorstroomanalyse",
+    #page_icon="👋",
 )
 st.markdown(
     """
