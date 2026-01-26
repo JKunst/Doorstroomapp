@@ -204,7 +204,7 @@ def analyze_three_year_leerfase_transitions(df, schooljaar_start, schooljaar_ein
 
     Returns:
         pd.Series: A Series with three-year transition strings as index and counts as values.
-                   (e.g., "v5 -> v6", "v5 -> v6 -> h1", or "v5 -> v6 -> h1 -> h2").
+                   (e.g., "v5 -> v6", "v5 -> v6 -> Geslaagd", or "v5 -> v5_doublure").
     """
     # Filter students who were in the leerfase_start within the specified year range.
     initial_phase_students_df = df[
@@ -268,7 +268,9 @@ def analyze_three_year_leerfase_transitions(df, schooljaar_start, schooljaar_ein
     # Conditionally add the first transition
     transitions_df['Transition'] = np.where(
         (transitions_df['next_schooljaar_1'] == transitions_df['Schooljaar'] + 1) & (
-            transitions_df['next_leerfase_1'].notna()),
+            transitions_df['next_leerfase_1'].notna())&
+        (transitions_df['next_leerfase_1'] != "Doorstroom")
+        ,
         transitions_df['Transition'] + ' -> ' + transitions_df['next_leerfase_1'],
         transitions_df['Transition']
     )
@@ -277,7 +279,9 @@ def analyze_three_year_leerfase_transitions(df, schooljaar_start, schooljaar_ein
     transitions_df['Transition'] = np.where(
         (transitions_df['next_schooljaar_1'] == transitions_df['Schooljaar'] + 1) &
         (transitions_df['next_schooljaar_2'] == transitions_df['Schooljaar'] + 2) &
-        (transitions_df['next_leerfase_2'].notna()),
+        (transitions_df['next_leerfase_2'].notna())&
+        (transitions_df['next_leerfase_2'] != "Doorstroom")
+        ,
         transitions_df['Transition'] + ' -> ' + transitions_df['next_leerfase_2'],
         transitions_df['Transition']
     )
@@ -287,7 +291,9 @@ def analyze_three_year_leerfase_transitions(df, schooljaar_start, schooljaar_ein
         (transitions_df['next_schooljaar_1'] == transitions_df['Schooljaar'] + 1) &
         (transitions_df['next_schooljaar_2'] == transitions_df['Schooljaar'] + 2) &
         (transitions_df['next_schooljaar_3'] == transitions_df['Schooljaar'] + 3) &
-        (transitions_df['next_leerfase_3'].notna()),
+        (transitions_df['next_leerfase_3'].notna())&
+        (transitions_df['next_leerfase_3'] != "Doorstroom")
+        ,
         transitions_df['Transition'] + ' -> ' + transitions_df['next_leerfase_3'],
         transitions_df['Transition']
     )
