@@ -4,3 +4,5 @@ pandas
 openpyxl
 st_pages
 streamlit-extras
+streamlit>=1.25
+altair==4.2.2
