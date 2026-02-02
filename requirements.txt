@@ -5,3 +5,4 @@ openpyxl
 st_pages
 streamlit-extras
 altair<5
+imghdr
